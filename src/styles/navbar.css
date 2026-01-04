@@ -1,0 +1,100 @@
+/* Enhanced Navbar Styles */
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar-logo:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+}
+
+/* Desktop Nav Links with Hover Effect */
+.navbar-menu a:not(.navbar-link) {
+    position: relative;
+}
+
+.navbar-menu a:not(.navbar-link)::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    background: linear-gradient(90deg, #C4A77D, #A68A5A);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    border-radius: 2px;
+}
+
+.navbar-menu a:not(.navbar-link):hover {
+    color: #C4A77D !important;
+}
+
+.navbar-menu a:not(.navbar-link):hover::after {
+    transform: scaleX(1);
+}
+
+/* Icon Buttons Hover */
+.navbar-container a[style*="border-radius: 50%"]:hover {
+    background: linear-gradient(135deg, #C4A77D, #A68A5A) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(196, 167, 125, 0.4);
+}
+
+/* Skin Quiz Button Hover */
+.navbar-menu a[style*="linear-gradient(135deg, #C4A77D"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(196, 167, 125, 0.5) !important;
+}
+
+/* Cart Badge Pulse */
+@keyframes pulse-badge {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.navbar-container a span[style*="position: absolute"] {
+    animation: pulse-badge 2s infinite;
+}
+
+/* Mobile Menu Enhancements */
+.mobile-menu-close:hover {
+    background: #FEE2E2 !important;
+    color: #EF4444 !important;
+    transform: rotate(90deg);
+}
+
+.navbar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.navbar-link:hover {
+    background: rgba(196, 167, 125, 0.1);
+    color: #C4A77D;
+    transform: translateX(4px);
+}
+
+/* Scrolled State */
+.navbar.scrolled {
+    background: rgba(255, 255, 255, 0.98) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}

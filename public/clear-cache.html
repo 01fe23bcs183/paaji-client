@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache - JMC Skincare</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        button {
+            background: #C4A77D;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        button:hover {
+            background: #A68A5A;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧹 Clear Browser Cache</h1>
+    <p>Click the button below to clear all caches and service workers</p>
+
+    <button onclick="clearEverything()">Clear All Cache & Service Workers</button>
+
+    <div id="status" class="status">
+        Ready to clear...
+    </div>
+
+    <script>
+        async function clearEverything() {
+            const status = document.getElementById('status');
+
+            try {
+                status.innerHTML = '⏳ Clearing caches...';
+
+                // Clear all caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(cacheNames.map(name => caches.delete(name)));
+                    status.innerHTML += '<br>✅ All caches cleared';
+                }
+
+                // Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(registrations.map(reg => reg.unregister()));
+                    status.innerHTML += '<br>✅ All service workers unregistered';
+                }
+
+                status.innerHTML += '<br><br>✨ <strong>All clear! Please close this tab and hard refresh (Ctrl+Shift+R) the main site.</strong>';
+
+            } catch (error) {
+                status.innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+
+</html>
