@@ -19,6 +19,8 @@ import reviewRoutes from './routes/reviews.js';
 import couponRoutes from './routes/coupons.js';
 import webhookRoutes from './routes/webhooks.js';
 import analyticsRoutes from './routes/analytics.js';
+import campaignRoutes from './routes/campaigns.js';
+import shiprocketRoutes from './routes/shiprocket.js';
 
 const app = express();
 
@@ -62,6 +64,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/campaigns', campaignRoutes);
+app.use('/api/shiprocket', shiprocketRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

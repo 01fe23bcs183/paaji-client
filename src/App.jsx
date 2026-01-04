@@ -35,6 +35,7 @@ import Payments from './pages/admin/Payments';
 import Settings from './pages/admin/Settings';
 import CancelledOrders from './pages/admin/CancelledOrders';
 import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
+import Campaigns from './pages/admin/Campaigns';
 
 // Components
 import Navbar from './components/Navbar';
@@ -42,6 +43,7 @@ import Footer from './components/Footer';
 import ExitIntentPopup from './components/ExitIntentPopup';
 import InstallPrompt from './components/InstallPrompt';
 import CartRecoveryBanner from './components/CartRecoveryBanner';
+import CampaignBanner from './components/CampaignBanner';
 
 
 import './index.css';
@@ -86,11 +88,13 @@ function App() {
                     <Route path="payments" element={<Payments />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="analytics" element={<AnalyticsDashboard />} />
+                    <Route path="campaigns" element={<Campaigns />} />
                   </Route>
 
                   {/* Customer Routes */}
                   <Route path="/*" element={
                     <>
+                      <CampaignBanner />
                       <Navbar />
                       <Routes>
                         <Route path="/" element={<Home />} />
