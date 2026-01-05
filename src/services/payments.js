@@ -239,19 +239,53 @@ export const getAvailablePaymentMethods = () => {
 };
 
 // ========================================
-// Verify Payment (Mock - should be done on backend)
+// Verify Payment
 // ========================================
 
-export const verifyPayment = async (_paymentId, _orderId) => {
-    // In production, this should call your backend to verify with Razorpay/Cashfree
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                verified: true,
-                status: 'success',
-            });
-        }, 1000);
-    });
+import api from './api';
+
+// Check if we're in demo mode
+const isDemoMode = () => {
+    return import.meta.env.VITE_DEMO_MODE === 'true';
+};
+
+export const verifyPayment = async (paymentId, orderId, gateway = 'razorpay', signature = null) => {
+    // In demo mode, simulate successful verification
+    if (isDemoMode()) {
+        console.warn('Payment verification in demo mode - always returns success');
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    verified: true,
+                    status: 'success',
+                    message: 'Demo mode - payment verification simulated',
+                });
+            }, 500);
+        });
+    }
+
+    // Production mode - verify with backend
+    try {
+        const response = await api.post('/payments/verify', {
+            paymentId,
+            orderId,
+            gateway,
+            signature, // Required for Razorpay signature verification
+        });
+
+        return {
+            verified: response.data.verified,
+            status: response.data.status,
+            message: response.data.message,
+        };
+    } catch (error) {
+        console.error('Payment verification failed:', error);
+        return {
+            verified: false,
+            status: 'failed',
+            message: error.response?.data?.message || 'Payment verification failed',
+        };
+    }
 };
 
 // ========================================
@@ -287,43 +321,47 @@ export const calculateOrderTotal = (items, shippingCost = 0, discount = 0) => {
 };
 
 // ========================================
-// Send Order Notifications (Mock)
+// Send Order Notifications
 // ========================================
 
 export const sendOrderNotifications = async (order) => {
-    // In production, this should call your backend to send emails/WhatsApp
+    // In demo mode, just log the notifications
+    if (isDemoMode()) {
+        console.log('📧 [Demo] Email notification to:', order.customer.email);
+        console.log('📱 [Demo] WhatsApp notification to:', order.customer.phone);
+        return {
+            email: true,
+            whatsapp: true,
+            message: 'Demo mode - notifications simulated',
+        };
+    }
 
-    console.log('📧 Sending email notification to:', order.customer.email);
-    console.log('📱 Sending WhatsApp notification to:', order.customer.phone);
+    // Production mode - call backend to send real notifications
+    try {
+        const response = await api.post('/notifications/order', {
+            orderId: order.id,
+            customerEmail: order.customer.email,
+            customerPhone: order.customer.phone,
+            orderDetails: {
+                items: order.items,
+                total: order.total,
+                status: order.status,
+            },
+        });
 
-    // Mock email notification
-    const emailSent = await mockEmailSend(order);
-
-    // Mock WhatsApp notification
-    const whatsappSent = await mockWhatsAppSend(order);
-
-    return {
-        email: emailSent,
-        whatsapp: whatsappSent,
-    };
-};
-
-const mockEmailSend = async (order) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log(`✅ Email sent for order #${order.id}`);
-            resolve(true);
-        }, 500);
-    });
-};
-
-const mockWhatsAppSend = async (order) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log(`✅ WhatsApp message sent for order #${order.id}`);
-            resolve(true);
-        }, 500);
-    });
+        return {
+            email: response.data.emailSent,
+            whatsapp: response.data.whatsappSent,
+            message: response.data.message,
+        };
+    } catch (error) {
+        console.error('Failed to send notifications:', error);
+        return {
+            email: false,
+            whatsapp: false,
+            message: error.response?.data?.message || 'Failed to send notifications',
+        };
+    }
 };
 
 // ========================================

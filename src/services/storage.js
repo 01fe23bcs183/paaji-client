@@ -324,41 +324,34 @@ export const updatePaymentConfig = (gateway, updates) => {
 };
 
 // ========================================
-// Admin Auth (localStorage)
+// Admin Auth (DEPRECATED - use adminAuth.js instead)
 // ========================================
+// These functions are kept for backward compatibility but should not be used.
+// Import from '../services/adminAuth' instead for proper auth handling.
 
-const ADMIN_KEY = 'jmc-admin-auth';
-const DEFAULT_PASSWORD = 'admin123'; // Change this!
+import adminAuth from './adminAuth';
 
+// @deprecated Use adminAuth.login() instead
 export const adminLogin = (password) => {
-  const savedPassword = localStorage.getItem('jmc-admin-password') || DEFAULT_PASSWORD;
-  
-  if (password === savedPassword) {
-    const token = btoa(`admin:${Date.now()}`);
-    localStorage.setItem(ADMIN_KEY, token);
-    return { success: true, token };
-  }
-  
-  return { success: false, message: 'Invalid password' };
+  console.warn('adminLogin from storage.js is deprecated. Use adminAuth.login() instead.');
+  return adminAuth.login({ password });
 };
 
+// @deprecated Use adminAuth.logout() instead
 export const adminLogout = () => {
-  localStorage.removeItem(ADMIN_KEY);
+  console.warn('adminLogout from storage.js is deprecated. Use adminAuth.logout() instead.');
+  return adminAuth.logout();
 };
 
+// @deprecated Use adminAuth.isAuthenticatedSync() instead
 export const isAdminAuthenticated = () => {
-  return !!localStorage.getItem(ADMIN_KEY);
+  return adminAuth.isAuthenticatedSync();
 };
 
+// @deprecated Use adminAuth.changePassword() instead
 export const changeAdminPassword = (currentPassword, newPassword) => {
-  const savedPassword = localStorage.getItem('jmc-admin-password') || DEFAULT_PASSWORD;
-  
-  if (currentPassword === savedPassword) {
-    localStorage.setItem('jmc-admin-password', newPassword);
-    return { success: true };
-  }
-  
-  return { success: false, message: 'Current password is incorrect' };
+  console.warn('changeAdminPassword from storage.js is deprecated. Use adminAuth.changePassword() instead.');
+  return adminAuth.changePassword(currentPassword, newPassword);
 };
 
 // ========================================
