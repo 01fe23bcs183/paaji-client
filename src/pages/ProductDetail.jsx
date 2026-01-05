@@ -8,6 +8,7 @@ import StockIndicator from '../components/StockIndicator';
 import TrustBadges from '../components/TrustBadges';
 import StickyAddToCart from '../components/StickyAddToCart';
 import RecentlyViewed, { addToRecentlyViewed } from '../components/RecentlyViewed';
+import ProductReviews from '../components/ProductReviews';
 import SEO from '../components/SEO';
 
 const ProductDetail = () => {
@@ -213,12 +214,17 @@ const ProductDetail = () => {
                 </div>
             </div>
 
-            {/* Recently Viewed Section */}
-            <div className="container" style={{ marginTop: 'var(--spacing-xxl)' }}>
-                <RecentlyViewed excludeId={product.id} maxItems={4} />
-            </div>
+                        {/* Product Reviews Section */}
+                        <div className="container" style={{ marginTop: 'var(--spacing-xxl)' }}>
+                            <ProductReviews productId={product.id} productName={product.name} />
+                        </div>
 
-            {/* Sticky Add to Cart for Mobile */}
+                        {/* Recently Viewed Section */}
+                        <div className="container" style={{ marginTop: 'var(--spacing-xxl)' }}>
+                            <RecentlyViewed excludeId={product.id} maxItems={4} />
+                        </div>
+
+                        {/* Sticky Add to Cart for Mobile */}
             <StickyAddToCart
                 product={product}
                 price={currentPrice}

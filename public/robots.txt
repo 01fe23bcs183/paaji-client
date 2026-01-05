@@ -1,0 +1,15 @@
+# JMC Skincare - Robots.txt
+# https://www.robotstxt.org/
+
+User-agent: *
+Allow: /
+
+# Disallow admin pages from indexing
+Disallow: /admin/
+Disallow: /admin/*
+
+# Allow search engines to find the sitemap
+Sitemap: /sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1

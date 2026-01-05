@@ -7,6 +7,7 @@ import { AdminProvider } from './context/AdminContext';
 
 // Customer Pages
 import Home from './pages/Home';
+import ProductsPage from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
@@ -17,6 +18,7 @@ import OrderSuccess from './pages/OrderSuccess';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MyAccount from './pages/MyAccount';
+import UserProfile from './pages/UserProfile';
 import SkinQuiz from './pages/SkinQuiz';
 import Bundles from './pages/Bundles';
 import Blog from './pages/Blog';
@@ -97,8 +99,9 @@ function App() {
                       <CampaignBanner />
                       <Navbar />
                       <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/product/:slug" element={<ProductDetail />} />
+                                                                                                <Route path="/" element={<Home />} />
+                                                                        <Route path="/products" element={<ProductsPage />} />
+                                                                        <Route path="/product/:slug" element={<ProductDetail />} />
                         <Route path="/cart" element={<Cart />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/about" element={<About />} />
@@ -107,8 +110,9 @@ function App() {
                         <Route path="/order-success" element={<OrderSuccess />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-                        <Route path="/my-account" element={<MyAccount />} />
-                        <Route path="/skin-quiz" element={<SkinQuiz />} />
+                                                <Route path="/my-account" element={<MyAccount />} />
+                                                <Route path="/profile" element={<UserProfile />} />
+                                                <Route path="/skin-quiz" element={<SkinQuiz />} />
                         <Route path="/bundles" element={<Bundles />} />
                         <Route path="/blog" element={<Blog />} />
                         <Route path="/blog/:slug" element={<BlogPost />} />
