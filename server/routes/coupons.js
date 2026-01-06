@@ -1,52 +1,15 @@
 import express from 'express';
 import { protect, authorize } from '../middleware/auth.js';
-import sequelize from '../config/database.js';
+import Coupon from '../models/Coupon.js';
 
 const router = express.Router();
-
-// Coupon model (using localStorage equivalent in DB)
-const coupons = [
-    {
-        code: 'WELCOME10',
-        type: 'percentage',
-        value: 10,
-        minOrder: 500,
-        maxDiscount: 500,
-        expiryDate: new Date('2026-12-31'),
-        isActive: true,
-        usageCount: 0,
-        usageLimit: 1000
-    },
-    {
-        code: 'SAVE20',
-        type: 'percentage',
-        value: 20,
-        minOrder: 1000,
-        maxDiscount: 1000,
-        expiryDate: new Date('2026-12-31'),
-        isActive: true,
-        usageCount: 0,
-        usageLimit: 500
-    },
-    {
-        code: 'FLAT100',
-        type: 'fixed',
-        value: 100,
-        minOrder: 800,
-        maxDiscount: 100,
-        expiryDate: new Date('2026-12-31'),
-        isActive: true,
-        usageCount: 0,
-        usageLimit: 500
-    }
-];
 
 // @route   POST /api/coupons/validate
 // @desc    Validate and calculate coupon discount
 // @access  Public
 router.post('/validate', async (req, res) => {
     try {
-        const { code, orderTotal } = req.body;
+        const { code, orderTotal, productIds = [] } = req.body;
 
         if (!code || !orderTotal) {
             return res.status(400).json({
@@ -55,10 +18,13 @@ router.post('/validate', async (req, res) => {
             });
         }
 
-        // Find coupon
-        const coupon = coupons.find(
-            c => c.code.toUpperCase() === code.toUpperCase() && c.isActive
-        );
+        // Find active coupon by code
+        const coupon = await Coupon.findOne({
+            where: {
+                code: code.toUpperCase(),
+                isActive: true
+            }
+        });
 
         if (!coupon) {
             return res.status(404).json({
@@ -67,55 +33,37 @@ router.post('/validate', async (req, res) => {
             });
         }
 
-        // Check expiry
-        if (new Date() > new Date(coupon.expiryDate)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Coupon has expired'
-            });
-        }
+        // Validate coupon using instance method
+        const validation = coupon.isValid(orderTotal, null, productIds);
 
-        // Check usage limit
-        if (coupon.usageCount >= coupon.usageLimit) {
+        if (!validation.valid) {
             return res.status(400).json({
                 success: false,
-                message: 'Coupon usage limit reached'
-            });
-        }
-
-        // Check minimum order amount
-        if (orderTotal < coupon.minOrder) {
-            return res.status(400).json({
-                success: false,
-                message: `Minimum order amount of ₹${coupon.minOrder} required`
+                message: validation.message
             });
         }
 
         // Calculate discount
-        let discount = 0;
-        if (coupon.type === 'percentage') {
-            discount = (orderTotal * coupon.value) / 100;
-            if (discount > coupon.maxDiscount) {
-                discount = coupon.maxDiscount;
-            }
-        } else {
-            discount = coupon.value;
-        }
+        const discount = coupon.calculateDiscount(orderTotal);
 
         res.json({
             success: true,
             valid: true,
-            discount: Math.round(discount),
+            discount: Math.round(discount * 100) / 100,
             coupon: {
                 code: coupon.code,
                 type: coupon.type,
                 value: coupon.value,
-                minOrder: coupon.minOrder,
-                maxDiscount: coupon.maxDiscount
+                minOrderValue: coupon.minOrderValue,
+                maxDiscount: coupon.maxDiscount,
+                isFreeShipping: coupon.type === 'freeShipping'
             },
-            message: `Coupon applied! You saved ₹${Math.round(discount)}`
+            message: coupon.type === 'freeShipping'
+                ? 'Free shipping applied!'
+                : `Coupon applied! You saved ₹${Math.round(discount)}`
         });
     } catch (error) {
+        console.error('Coupon validation error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -123,16 +71,22 @@ router.post('/validate', async (req, res) => {
     }
 });
 
+
 // @route   GET /api/coupons
 // @desc    Get all coupons
 // @access  Admin
 router.get('/', protect, authorize('admin'), async (req, res) => {
     try {
+        const coupons = await Coupon.findAll({
+            order: [['createdAt', 'DESC']]
+        });
+
         res.json({
             success: true,
-            coupons: coupons.filter(c => c.isActive)
+            coupons
         });
     } catch (error) {
+        console.error('Get coupons error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -145,10 +99,13 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 // @access  Admin
 router.post('/', protect, authorize('admin'), async (req, res) => {
     try {
-        const { code, type, value, minOrder, maxDiscount, expiryDate, usageLimit } = req.body;
+        const { code, type, value, minOrderValue, maxDiscount, expiryDate, usageLimit, description } = req.body;
 
         // Check if coupon already exists
-        const existingCoupon = coupons.find(c => c.code.toUpperCase() === code.toUpperCase());
+        const existingCoupon = await Coupon.findOne({
+            where: { code: code.toUpperCase() }
+        });
+
         if (existingCoupon) {
             return res.status(400).json({
                 success: false,
@@ -156,19 +113,18 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
             });
         }
 
-        const newCoupon = {
+        const newCoupon = await Coupon.create({
             code: code.toUpperCase(),
             type,
             value,
-            minOrder,
-            maxDiscount,
+            minOrderValue: minOrderValue || 0,
+            maxDiscount: maxDiscount || null,
             expiryDate: new Date(expiryDate),
+            usageLimit: usageLimit || null,
+            description: description || null,
             isActive: true,
-            usageCount: 0,
-            usageLimit: usageLimit || 1000
-        };
-
-        coupons.push(newCoupon);
+            usedCount: 0
+        });
 
         res.status(201).json({
             success: true,
@@ -176,6 +132,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
             coupon: newCoupon
         });
     } catch (error) {
+        console.error('Create coupon error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -188,24 +145,26 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
 // @access  Admin
 router.delete('/:code', protect, authorize('admin'), async (req, res) => {
     try {
-        const couponIndex = coupons.findIndex(
-            c => c.code.toUpperCase() === req.params.code.toUpperCase()
-        );
+        const coupon = await Coupon.findOne({
+            where: { code: req.params.code.toUpperCase() }
+        });
 
-        if (couponIndex === -1) {
+        if (!coupon) {
             return res.status(404).json({
                 success: false,
                 message: 'Coupon not found'
             });
         }
 
-        coupons[couponIndex].isActive = false;
+        // Soft delete by setting isActive to false
+        await coupon.update({ isActive: false });
 
         res.json({
             success: true,
             message: 'Coupon deleted successfully'
         });
     } catch (error) {
+        console.error('Delete coupon error:', error);
         res.status(500).json({
             success: false,
             message: error.message
@@ -213,17 +172,18 @@ router.delete('/:code', protect, authorize('admin'), async (req, res) => {
     }
 });
 
+
 // @route   PATCH /api/coupons/:code/increment
 // @desc    Increment coupon usage (called after order placement)
 // @access  Private
 router.patch('/:code/increment', async (req, res) => {
     try {
-        const coupon = coupons.find(
-            c => c.code.toUpperCase() === req.params.code.toUpperCase()
-        );
+        const coupon = await Coupon.findOne({
+            where: { code: req.params.code.toUpperCase() }
+        });
 
         if (coupon) {
-            coupon.usageCount++;
+            await coupon.incrementUsage();
         }
 
         res.json({
@@ -231,6 +191,7 @@ router.patch('/:code/increment', async (req, res) => {
             message: 'Coupon usage updated'
         });
     } catch (error) {
+        console.error('Increment coupon error:', error);
         res.status(500).json({
             success: false,
             message: error.message
