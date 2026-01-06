@@ -82,6 +82,35 @@ const Order = sequelize.define('Order', {
     whatsappSent: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
+    },
+    // Shiprocket fields
+    shiprocketOrderId: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    shipmentId: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    awbCode: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    courierCompanyId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    courierName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    shippingStatus: {
+        type: DataTypes.ENUM('not_created', 'processing', 'manifested', 'dispatched', 'in_transit', 'out_for_delivery', 'delivered', 'rto', 'cancelled'),
+        defaultValue: 'not_created'
+    },
+    pickupScheduledDate: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
 }, {
     tableName: 'orders',

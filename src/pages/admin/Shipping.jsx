@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAdmin } from '../../context/AdminContext';
 import {
     FiPackage, FiTruck, FiMapPin, FiCheckCircle, FiAlertCircle,
     FiDownload, FiPrinter, FiRefreshCw, FiSearch, FiFilter,
@@ -6,52 +7,20 @@ import {
 } from 'react-icons/fi';
 
 const ShiprocketPanel = () => {
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { orders, loadAdminData } = useAdmin();
+    const [loading, setLoading] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [trackingData, setTrackingData] = useState(null);
     const [filter, setFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Mock orders for demo - replace with real API call
     useEffect(() => {
-        fetchOrders();
-    }, []);
+        loadAdminData();
+    }, [loadAdminData]);
 
-    const fetchOrders = async () => {
-        try {
-            const response = await fetch('/api/orders?status=processing');
-            if (response.ok) {
-                const data = await response.json();
-                setOrders(data);
-            }
-        } catch (error) {
-            console.error('Failed to fetch orders:', error);
-            // Demo data
-            setOrders([
-                {
-                    id: 'ORD-001',
-                    customer: 'Priya Sharma',
-                    address: 'Mumbai, MH 400001',
-                    status: 'pending',
-                    amount: 2499,
-                    items: 3,
-                    createdAt: new Date().toISOString(),
-                },
-                {
-                    id: 'ORD-002',
-                    customer: 'Rahul Verma',
-                    address: 'Delhi, DL 110001',
-                    status: 'shipped',
-                    awbCode: 'SR123456789',
-                    amount: 1899,
-                    items: 2,
-                    createdAt: new Date().toISOString(),
-                },
-            ]);
-        } finally {
-            setLoading(false);
-        }
+    const fetchOrders = () => {
+        setLoading(true);
+        loadAdminData().finally(() => setLoading(false));
     };
 
     const createShipment = async (orderId) => {
