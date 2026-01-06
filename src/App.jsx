@@ -44,6 +44,7 @@ import ExitIntentPopup from './components/ExitIntentPopup';
 import InstallPrompt from './components/InstallPrompt';
 import CartRecoveryBanner from './components/CartRecoveryBanner';
 import CampaignBanner from './components/CampaignBanner';
+import ErrorBoundary from './components/ErrorBoundary';
 
 
 import './index.css';
@@ -68,64 +69,66 @@ import './styles/admin.css';
 
 function App() {
   return (
-    <HelmetProvider>
-      <AuthProvider>
-        <SettingsProvider>
-          <CartProvider>
-            <AdminProvider>
-              <Router>
-                <Routes>
-                  {/* Admin Routes */}
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="products" element={<Products />} />
-                    <Route path="orders" element={<Orders />} />
-                    <Route path="cancelled" element={<CancelledOrders />} />
-                    <Route path="media" element={<MediaLibrary />} />
-                    <Route path="coupons" element={<Coupons />} />
-                    <Route path="shipping" element={<Shipping />} />
-                    <Route path="payments" element={<Payments />} />
-                    <Route path="settings" element={<Settings />} />
-                    <Route path="analytics" element={<AnalyticsDashboard />} />
-                    <Route path="campaigns" element={<Campaigns />} />
-                  </Route>
+    <ErrorBoundary>
+      <HelmetProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <CartProvider>
+              <AdminProvider>
+                <Router>
+                  <Routes>
+                    {/* Admin Routes */}
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin" element={<AdminLayout />}>
+                      <Route index element={<Dashboard />} />
+                      <Route path="products" element={<Products />} />
+                      <Route path="orders" element={<Orders />} />
+                      <Route path="cancelled" element={<CancelledOrders />} />
+                      <Route path="media" element={<MediaLibrary />} />
+                      <Route path="coupons" element={<Coupons />} />
+                      <Route path="shipping" element={<Shipping />} />
+                      <Route path="payments" element={<Payments />} />
+                      <Route path="settings" element={<Settings />} />
+                      <Route path="analytics" element={<AnalyticsDashboard />} />
+                      <Route path="campaigns" element={<Campaigns />} />
+                    </Route>
 
-                  {/* Customer Routes */}
-                  <Route path="/*" element={
-                    <>
-                      <CampaignBanner />
-                      <Navbar />
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/product/:slug" element={<ProductDetail />} />
-                        <Route path="/cart" element={<Cart />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="/contact" element={<Contact />} />
-                        <Route path="/track-order" element={<OrderTracking />} />
-                        <Route path="/order-success" element={<OrderSuccess />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/my-account" element={<MyAccount />} />
-                        <Route path="/skin-quiz" element={<SkinQuiz />} />
-                        <Route path="/bundles" element={<Bundles />} />
-                        <Route path="/blog" element={<Blog />} />
-                        <Route path="/blog/:slug" element={<BlogPost />} />
-                      </Routes>
-                      <Footer />
-                      <ExitIntentPopup />
-                      <InstallPrompt />
-                      <CartRecoveryBanner />
-                    </>
-                  } />
-                </Routes>
-              </Router>
-            </AdminProvider>
-          </CartProvider>
-        </SettingsProvider>
-      </AuthProvider>
-    </HelmetProvider>
+                    {/* Customer Routes */}
+                    <Route path="/*" element={
+                      <>
+                        <CampaignBanner />
+                        <Navbar />
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/product/:slug" element={<ProductDetail />} />
+                          <Route path="/cart" element={<Cart />} />
+                          <Route path="/checkout" element={<Checkout />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/contact" element={<Contact />} />
+                          <Route path="/track-order" element={<OrderTracking />} />
+                          <Route path="/order-success" element={<OrderSuccess />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/register" element={<Register />} />
+                          <Route path="/my-account" element={<MyAccount />} />
+                          <Route path="/skin-quiz" element={<SkinQuiz />} />
+                          <Route path="/bundles" element={<Bundles />} />
+                          <Route path="/blog" element={<Blog />} />
+                          <Route path="/blog/:slug" element={<BlogPost />} />
+                        </Routes>
+                        <Footer />
+                        <ExitIntentPopup />
+                        <InstallPrompt />
+                        <CartRecoveryBanner />
+                      </>
+                    } />
+                  </Routes>
+                </Router>
+              </AdminProvider>
+            </CartProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
 
