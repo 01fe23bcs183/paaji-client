@@ -5,10 +5,18 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
-import { connectDatabase } from './config/database.js';
+import sequelize from './config/database.js';
 
 // Load environment variables
 dotenv.config();
+
+// Import models (must be imported before routes to ensure models are registered)
+import User from './models/User.js';
+import Product from './models/Product.js';
+import Order from './models/Order.js';
+import Review from './models/Review.js';
+import Campaign from './models/Campaign.js';
+import Coupon from './models/Coupon.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -52,8 +60,33 @@ app.use(compression());
 // Static files
 app.use('/uploads', express.static('uploads'));
 
-// Connect to MySQL database
-connectDatabase();
+// Initialize Database and Sync Models
+const initializeDatabase = async () => {
+    try {
+        await sequelize.authenticate();
+        console.log('✅ Database connection established successfully');
+
+        // Sync all models
+        // Use { force: false } in production, { alter: true } in development
+        const syncOptions = process.env.NODE_ENV === 'production'
+            ? { force: false }
+            : { alter: true };
+
+        await sequelize.sync(syncOptions);
+        console.log('✅ All models synchronized successfully');
+
+        // Log registered models
+        const models = Object.keys(sequelize.models);
+        console.log(`📦 Registered models: ${models.join(', ')}`);
+
+    } catch (error) {
+        console.error('❌ Database initialization failed:', error);
+        process.exit(1);
+    }
+};
+
+// Initialize database
+initializeDatabase();
 
 // Routes
 app.use('/api/auth', authRoutes);
