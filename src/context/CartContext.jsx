@@ -1,9 +1,11 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { validateCoupon } from '../services/storage';
 import { calculateOrderTotal } from '../services/payments';
 import { trackCartActivity, markCartRecovered } from '../services/cartAbandonment';
+import axios from 'axios';
 
 const CartContext = createContext();
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const useCart = () => {
     const context = useContext(CartContext);
@@ -44,6 +46,52 @@ export const CartProvider = ({ children }) => {
     const [coupon, setCoupon] = useState(initialCart.coupon);
     const [shippingCost, setShippingCost] = useState(initialCart.shippingCost);
 
+    // Check if user is logged in
+    const getAuthToken = () => localStorage.getItem('auth_token');
+
+    // Sync cart to backend for logged-in users
+    const syncCartToBackend = useCallback(async (cartItems, cartCoupon) => {
+        const token = getAuthToken();
+        if (!token) return;
+
+        try {
+            await axios.post(`${API_BASE}/cart/sync`, {
+                items: cartItems,
+                couponCode: cartCoupon?.code
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        } catch (error) {
+            console.log('Cart sync (optional):', error.message);
+        }
+    }, []);
+
+    // Load cart from backend on mount (if logged in)
+    useEffect(() => {
+        const loadBackendCart = async () => {
+            const token = getAuthToken();
+            if (!token) return;
+
+            try {
+                const response = await axios.get(`${API_BASE}/cart`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                if (response.data.success && response.data.cart.items.length > 0) {
+                    // Merge with local cart (prefer more recent)
+                    const backendItems = response.data.cart.items;
+                    if (backendItems.length > 0 && items.length === 0) {
+                        setItems(backendItems);
+                    }
+                }
+            } catch (error) {
+                console.log('Backend cart load (optional):', error.message);
+            }
+        };
+
+        loadBackendCart();
+    }, []);
+
     // Save cart to localStorage whenever it changes
     useEffect(() => {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({
@@ -52,12 +100,15 @@ export const CartProvider = ({ children }) => {
             shippingCost,
         }));
 
+        // Sync to backend for logged-in users
+        syncCartToBackend(items, coupon);
+
         // Track cart activity for abandonment emails
         if (items.length > 0) {
             const email = localStorage.getItem('jmc_customer_email');
             trackCartActivity(items, email);
         }
-    }, [items, coupon, shippingCost]);
+    }, [items, coupon, shippingCost, syncCartToBackend]);
 
     // Add item to cart
     const addItem = (product, quantity = 1, variant = null) => {

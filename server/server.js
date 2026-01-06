@@ -29,6 +29,7 @@ import webhookRoutes from './routes/webhooks.js';
 import analyticsRoutes from './routes/analytics.js';
 import campaignRoutes from './routes/campaigns.js';
 import shiprocketRoutes from './routes/shiprocket.js';
+import cartRoutes from './routes/cart.js';
 
 const app = express();
 
@@ -99,6 +100,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/shiprocket', shiprocketRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
