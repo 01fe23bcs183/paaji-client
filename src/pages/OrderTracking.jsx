@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getOrders } from '../services/storage';
+import { getOrderByNumber } from '../services/customerAPI';
 import { formatCurrency } from '../services/payments';
 import { FiCheck, FiSearch } from 'react-icons/fi';
 
@@ -18,8 +18,7 @@ const OrderTracking = () => {
         setOrder(null);
 
         try {
-            const orders = await getOrders();
-            const found = orders.find(o => o.orderNumber === orderId.trim().toUpperCase());
+            const found = await getOrderByNumber(orderId.trim().toUpperCase());
 
             if (found) {
                 setOrder(found);

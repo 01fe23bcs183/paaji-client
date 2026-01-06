@@ -1,17 +1,28 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowRight, FiStar, FiHeart, FiShield, FiTruck, FiAward, FiRefreshCw } from 'react-icons/fi';
-import { getProducts } from '../data/productsData';
+import { getProducts } from '../services/customerAPI';
 import { useCart } from '../context/CartContext';
 import SEO from '../components/SEO';
 
 const Home = () => {
     const [featuredProducts, setFeaturedProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const { addItem } = useCart();
 
     useEffect(() => {
-        const products = getProducts({ featured: true, limit: 6 });
-        setFeaturedProducts(products);
+        const loadProducts = async () => {
+            setLoading(true);
+            try {
+                const products = await getProducts({ featured: true });
+                setFeaturedProducts(products.slice(0, 6));
+            } catch (error) {
+                console.error('Error loading products:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadProducts();
     }, []);
 
     const heroFeatures = [

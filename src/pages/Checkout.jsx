@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAdmin } from '../context/AdminContext';
 import { formatCurrency, processPayment, getAvailablePaymentMethods, generateOrderNumber, sendOrderNotifications } from '../services/payments';
-import { calculateShipping } from '../services/storage';
+import { getShippingRates } from '../services/customerAPI';
 import { FiCheck, FiCreditCard, FiTruck, FiLock } from 'react-icons/fi';
 import TrustBadges from '../components/TrustBadges';
 
@@ -38,13 +38,17 @@ const Checkout = () => {
 
     const handleCalculateShipping = useCallback(async (pincode) => {
         try {
-            const result = await calculateShipping(pincode);
+            const result = await getShippingRates(pincode);
             setShippingCost(result.rate);
-            setShippingDetails(result);
+            setShippingDetails({
+                rate: result.rate,
+                deliveryDays: result.deliveryDays,
+                zoneName: result.courierName || 'Standard'
+            });
         } catch (error) {
             console.error('Error calculating shipping:', error);
-            setShippingCost(100); // Default shipping
-            setShippingDetails({ rate: 100, deliveryDays: '5-7', zoneName: 'Standard' });
+            setShippingCost(99); // Default shipping
+            setShippingDetails({ rate: 99, deliveryDays: '5-7', zoneName: 'Standard' });
         }
     }, []);
 

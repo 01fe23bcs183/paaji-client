@@ -55,7 +55,7 @@ const Product = sequelize.define('Product', {
         defaultValue: []
     },
     category: {
-        type: DataTypes.ENUM('facewash', 'cream', 'tint', 'serum', 'other'),
+        type: DataTypes.STRING,
         defaultValue: 'other'
     },
     tags: {

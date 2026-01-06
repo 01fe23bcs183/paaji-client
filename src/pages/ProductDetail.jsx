@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getProducts } from '../services/storage';
+import { getProductBySlug } from '../services/customerAPI';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../services/payments';
 import { FiShoppingCart, FiCheck } from 'react-icons/fi';
@@ -20,17 +20,16 @@ const ProductDetail = () => {
 
     const loadProduct = useCallback(async () => {
         try {
-            const products = await getProducts();
-            const found = products.find(p => p.slug === slug);
+            setLoading(true);
+            const found = await getProductBySlug(slug);
             setProduct(found);
 
             if (found && found.variants && found.variants.length > 0) {
                 setSelectedVariant(found.variants[0]);
             }
-
-            setLoading(false);
         } catch (error) {
             console.error('Error loading product:', error);
+        } finally {
             setLoading(false);
         }
     }, [slug]);

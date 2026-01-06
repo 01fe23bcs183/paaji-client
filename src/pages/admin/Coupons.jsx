@@ -8,9 +8,9 @@ const Coupons = () => {
         code: '',
         type: 'percentage',
         value: '',
-        minOrder: '',
+        minOrderValue: '',
         maxDiscount: '',
-        expiresAt: '',
+        expiryDate: '',
     });
 
     useEffect(() => {
@@ -23,13 +23,14 @@ const Coupons = () => {
         await addNewCoupon({
             ...formData,
             value: parseFloat(formData.value),
-            minOrder: formData.minOrder ? parseFloat(formData.minOrder) : null,
+            minOrderValue: formData.minOrderValue ? parseFloat(formData.minOrderValue) : null,
             maxDiscount: formData.maxDiscount ? parseFloat(formData.maxDiscount) : null,
-            expiresAt: formData.expiresAt || null,
-            usageCount: 0,
+            expiryDate: formData.expiryDate || null,
+            usedCount: 0,
+            isActive: true,
         });
 
-        setFormData({ code: '', type: 'percentage', value: '', minOrder: '', maxDiscount: '', expiresAt: '' });
+        setFormData({ code: '', type: 'percentage', value: '', minOrderValue: '', maxDiscount: '', expiryDate: '' });
     };
 
     return (
@@ -99,8 +100,8 @@ const Coupons = () => {
                                     <input
                                         type="number"
                                         className="form-input"
-                                        value={formData.minOrder}
-                                        onChange={(e) => setFormData({ ...formData, minOrder: e.target.value })}
+                                        value={formData.minOrderValue}
+                                        onChange={(e) => setFormData({ ...formData, minOrderValue: e.target.value })}
                                         min="0"
                                     />
                                 </div>
@@ -123,8 +124,8 @@ const Coupons = () => {
                                     <input
                                         type="date"
                                         className="form-input"
-                                        value={formData.expiresAt}
-                                        onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                                        value={formData.expiryDate}
+                                        onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
                                     />
                                 </div>
                             </div>
