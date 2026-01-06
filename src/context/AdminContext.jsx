@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import {
     fetchProducts,
     fetchProduct,
@@ -23,10 +24,9 @@ import {
     getMedia,
     saveMedia,
     deleteMedia,
-    adminLogin,
-    adminLogout,
-    isAdminAuthenticated,
 } from '../services/storage';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const AdminContext = createContext();
 
@@ -40,12 +40,35 @@ export const useAdmin = () => {
 
 export const AdminProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [adminUser, setAdminUser] = useState(null);
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
     const [coupons, setCoupons] = useState([]);
     const [shippingZones, setShippingZones] = useState([]);
     const [media, setMedia] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    // Check for existing token on mount
+    useEffect(() => {
+        const token = localStorage.getItem('admin_token');
+        if (token) {
+            // Verify token is still valid
+            axios.get(`${API_BASE}/auth/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+                .then(res => {
+                    if (res.data.user && res.data.user.role === 'admin') {
+                        setAdminUser(res.data.user);
+                        setIsAuthenticated(true);
+                    } else {
+                        localStorage.removeItem('admin_token');
+                    }
+                })
+                .catch(() => {
+                    localStorage.removeItem('admin_token');
+                });
+        }
+    }, []);
 
     const loadAdminData = useCallback(async () => {
         setLoading(true);
@@ -75,27 +98,32 @@ export const AdminProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        setIsAuthenticated(isAdminAuthenticated());
-    }, []);
-
-    useEffect(() => {
         if (isAuthenticated) {
             loadAdminData();
         }
     }, [isAuthenticated, loadAdminData]);
 
-    // Auth
-    const login = async (password) => {
-        const result = adminLogin(password);
-        if (result.success) {
-            setIsAuthenticated(true);
-            return { success: true };
+    // Auth - Now uses backend JWT
+    const login = async (email, password) => {
+        try {
+            const response = await axios.post(`${API_BASE}/auth/login`, { email, password });
+
+            if (response.data.success && response.data.user?.role === 'admin') {
+                localStorage.setItem('admin_token', response.data.token);
+                setAdminUser(response.data.user);
+                setIsAuthenticated(true);
+                return { success: true };
+            }
+
+            return { success: false, message: 'Access denied. Admin privileges required.' };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || 'Login failed' };
         }
-        return { success: false, message: result.message };
     };
 
     const logout = () => {
-        adminLogout();
+        localStorage.removeItem('admin_token');
+        setAdminUser(null);
         setIsAuthenticated(false);
         setProducts([]);
         setOrders([]);
