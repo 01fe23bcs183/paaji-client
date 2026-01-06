@@ -1,18 +1,21 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
-    getProducts,
-    getProduct,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    getOrders,
-    getOrder,
-    createOrder,
-    updateOrder,
-    getCoupons,
-    addCoupon,
-    updateCoupon,
-    deleteCoupon,
+    fetchProducts,
+    fetchProduct,
+    createProduct,
+    updateProductAPI,
+    deleteProductAPI,
+    fetchOrders,
+    fetchOrder,
+    createOrderAPI,
+    updateOrderAPI,
+    fetchCoupons,
+    createCoupon,
+    updateCouponAPI,
+    deleteCouponAPI,
+    exportOrdersAPI,
+} from '../services/adminAPI';
+import {
     getShippingZones,
     addShippingZone,
     updateShippingZone,
@@ -23,7 +26,6 @@ import {
     adminLogin,
     adminLogout,
     isAdminAuthenticated,
-    exportOrdersToCSV,
 } from '../services/storage';
 
 const AdminContext = createContext();
@@ -48,13 +50,17 @@ export const AdminProvider = ({ children }) => {
     const loadAdminData = useCallback(async () => {
         setLoading(true);
         try {
-            const [productsData, ordersData, couponsData, zonesData, mediaData] = await Promise.all([
-                getProducts(),
-                getOrders(),
-                getCoupons(),
+            const [productsRes, ordersRes, couponsRes, zonesData, mediaData] = await Promise.all([
+                fetchProducts(),
+                fetchOrders(),
+                fetchCoupons(),
                 getShippingZones(),
                 getMedia(),
             ]);
+
+            const productsData = productsRes.data;
+            const ordersData = ordersRes.data;
+            const couponsData = couponsRes.data.coupons || couponsRes.data;
 
             setProducts(productsData);
             setOrders(ordersData);
@@ -101,106 +107,113 @@ export const AdminProvider = ({ children }) => {
     // Products
     const addNewProduct = async (productData) => {
         try {
-            const id = await addProduct(productData);
-            const newProduct = await getProduct(id);
+            const response = await createProduct(productData);
+            const newProduct = response.data.product || response.data;
             setProducts(prev => [...prev, newProduct]);
             return { success: true, product: newProduct };
         } catch (error) {
             console.error('Error adding product:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
     const editProduct = async (id, updates) => {
         try {
-            await updateProduct(id, updates);
-            const updated = await getProduct(id);
+            const response = await updateProductAPI(id, updates);
+            const updated = response.data.product || response.data;
             setProducts(prev => prev.map(p => p.id === id ? updated : p));
             return { success: true, product: updated };
         } catch (error) {
             console.error('Error updating product:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
     const removeProduct = async (id) => {
         try {
-            await deleteProduct(id);
+            await deleteProductAPI(id);
             setProducts(prev => prev.filter(p => p.id !== id));
             return { success: true };
         } catch (error) {
             console.error('Error deleting product:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
     // Orders
     const newOrder = async (orderData) => {
         try {
-            const order = await createOrder(orderData);
+            const response = await createOrderAPI(orderData);
+            const order = response.data.order || response.data;
             setOrders(prev => [order, ...prev]);
             return { success: true, order };
         } catch (error) {
             console.error('Error creating order:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
     const editOrder = async (id, updates) => {
         try {
-            await updateOrder(id, updates);
-            const updated = await getOrder(id);
+            const response = await updateOrderAPI(id, updates);
+            const updated = response.data.order || response.data;
             setOrders(prev => prev.map(o => o.id === id ? updated : o));
             return { success: true, order: updated };
         } catch (error) {
             console.error('Error updating order:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
     const exportOrders = async () => {
         try {
-            await exportOrdersToCSV();
+            const response = await exportOrdersAPI();
+            const blob = new Blob([response.data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
             return { success: true };
         } catch (error) {
             console.error('Error exporting orders:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
     // Coupons
     const addNewCoupon = async (couponData) => {
         try {
-            await addCoupon(couponData);
-            const updatedCoupons = await getCoupons();
-            setCoupons(updatedCoupons);
-            return { success: true };
+            const response = await createCoupon(couponData);
+            const newCoupon = response.data.coupon || response.data;
+            setCoupons(prev => [...prev, newCoupon]);
+            return { success: true, coupon: newCoupon };
         } catch (error) {
             console.error('Error adding coupon:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
     const editCoupon = async (code, updates) => {
         try {
-            await updateCoupon(code, updates);
-            const updatedCoupons = await getCoupons();
-            setCoupons(updatedCoupons);
+            await updateCouponAPI(code, updates);
+            const response = await fetchCoupons();
+            setCoupons(response.data.coupons || response.data);
             return { success: true };
         } catch (error) {
             console.error('Error updating coupon:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
     const removeCoupon = async (code) => {
         try {
-            await deleteCoupon(code);
+            await deleteCouponAPI(code);
             setCoupons(prev => prev.filter(c => c.code !== code));
             return { success: true };
         } catch (error) {
             console.error('Error deleting coupon:', error);
-            return { success: false, message: error.message };
+            return { success: false, message: error.response?.data?.message || error.message };
         }
     };
 
